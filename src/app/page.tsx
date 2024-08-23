@@ -1,4 +1,6 @@
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
+import Phone from "@/components/Phone";
+import { Check, Star } from "lucide-react";
 
 export default function Home() {
   return (
@@ -24,11 +26,73 @@ export default function Home() {
               <ul className="mt-8 flex flex-col items-center space-y-2 text-left font-medium sm:items-start">
                 <div className="space-y-2">
                   <li className="flex items-center gap-1.5 text-left">
+                    <Check className="h-5 w-5 shrink-0 text-green-600" />
                     High-quality, durable material
-                    {/* lucide react icons */}
+                  </li>
+                  <li className="flex items-center gap-1.5 text-left">
+                    <Check className="h-5 w-5 shrink-0 text-green-600" />5 year
+                    print guarantee
+                  </li>
+                  <li className="flex items-center gap-1.5 text-left">
+                    <Check className="h-5 w-5 shrink-0 text-green-600" />
+                    Modern iphone models supported
                   </li>
                 </div>
               </ul>
+
+              <div className="mt-12 flex flex-col items-center gap-5 sm:flex-row sm:items-start">
+                <div className="flex -space-x-4">
+                  <img
+                    className="inline-block size-10 rounded-full ring-2 ring-slate-100"
+                    src="/users/user-1.png"
+                    alt="user image"
+                  />
+                  <img
+                    className="inline-block size-10 rounded-full ring-2 ring-slate-100"
+                    src="/users/user-2.png"
+                    alt="user image"
+                  />
+                  <img
+                    className="inline-block size-10 rounded-full ring-2 ring-slate-100"
+                    src="/users/user-3.png"
+                    alt="user image"
+                  />
+                  <img
+                    className="inline-block size-10 rounded-full ring-2 ring-slate-100"
+                    src="/users/user-4.jpg"
+                    alt="user image"
+                  />
+                </div>
+
+                <div className="flex flex-col items-center justify-between sm:items-start">
+                  <div className="flex gap-0.5">
+                    <Star className="size-4 fill-green-600 text-green-400" />
+                    <Star className="size-4 fill-green-600 text-green-400" />
+                    <Star className="size-4 fill-green-600 text-green-400" />
+                    <Star className="size-4 fill-green-600 text-green-400" />
+                    <Star className="size-4 fill-green-600 text-green-400" />
+                  </div>
+                  <p>
+                    <span className="font-semibold">1.250</span> happy customers
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-full mt-32 flex h-fit w-full justify-center px-8 sm:px-16 md:px-0 lg:col-span-1 lg:mx-0 lg:mt-20">
+            <div className="mx-w-xl relative">
+              <img
+                src="/your-image.png"
+                className="absolute -top-20 left-56 hidden w-40 select-none sm:block lg:hidden lg:w-52 xl:block"
+                alt="user image"
+              />
+              <img
+                src="/line.png"
+                alt="line"
+                className="absolute -bottom-6 -left-6 w-full select-none"
+              />
+              <Phone />
             </div>
           </div>
         </MaxWidthWrapper>
