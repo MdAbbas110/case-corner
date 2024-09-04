@@ -1,19 +1,19 @@
-interface DesignConfiguratorProps{
-       configId:string
-       imgUrl:string
-       
-
-
+interface DesignConfiguratorProps {
+  configId: string;
+  imageUrl: string;
+  imageDimensions: { width: number; height: number };
 }
 
-const DesignConfigurator = ({configId,imageUrl,imageDimensions}: DesignConfiguratorProps) =>
-  {
+const DesignConfigurator = ({
+  configId,
+  imageUrl,
+  imageDimensions,
+}: DesignConfiguratorProps) => {
+  return (
+    <div>
+      <div></div>
+    </div>
+  );
+};
 
-return 
-(
-   
-)
-
-}
-
-export default DesignConfigurator
+export default DesignConfigurator;
