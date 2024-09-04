@@ -11,7 +11,7 @@ const DesignConfigurator = ({
 }: DesignConfiguratorProps) => {
   return (
     <div>
-      <div></div>
+      <div>hii</div>
     </div>
   );
 };
