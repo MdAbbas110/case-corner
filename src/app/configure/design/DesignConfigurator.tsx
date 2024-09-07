@@ -5,8 +5,10 @@ import { cn, formatPrice } from "@/lib/utils";
 import { Rnd } from "react-rnd";
 
 import { ScrollArea } from "@radix-ui/react-scroll-area";
-import { Button, Label, RadioGroup } from "@headlessui/react";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { RadioGroup } from "@headlessui/react";
+import { useRef, useState } from "react";
 import {
   COLORS,
   MODELS,
@@ -20,7 +22,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ArrowRight, Check, ChevronsUpDown } from "lucide-react";
+
 import HandleComponent from "@/components/HandleCompoent";
+import { useUploadThing } from "@/lib/uploadthing";
+import { useMutation } from "@tanstack/react-query";
+
+import { saveConfig as _saveConfig, SaveConfigArgs } from "./actions";
+import { useRouter } from "next/navigation";
+import { BASE_PRICE } from "@/config/products";
 
 interface DesignConfiguratorProps {
   configId: string;
@@ -33,6 +42,22 @@ const DesignConfigurator = ({
   imageUrl,
   imageDimensions,
 }: DesignConfiguratorProps) => {
+  const router = useRouter();
+
+  // Tan-stack query call to save both the cropped image and options selected for order
+  const { mutate: saveConfig } = useMutation({
+    mutationKey: ["save-config"],
+    mutationFn: async (args: SaveConfigArgs) => {
+      await Promise.all([saveConfiguration(), _saveConfig(args)]);
+    },
+    onError: () => {
+      alert("something went wrong while updating");
+    },
+    onSuccess: () => {
+      router.push(`/configure/preview?id=${configId}`);
+    },
+  });
+
   const [options, setOptions] = useState<{
     color: (typeof COLORS)[number];
     model: (typeof MODELS.options)[number];
@@ -52,11 +77,80 @@ const DesignConfigurator = ({
     y: 205,
   });
 
+  const phoneCaseRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const { startUpload } = useUploadThing("imageUploader");
+
+  async function saveConfiguration() {
+    try {
+      const {
+        left: caseLeft,
+        top: caseTop,
+        width,
+        height,
+      } = phoneCaseRef.current!.getBoundingClientRect();
+
+      const { left: containerLeft, top: containerTop } =
+        containerRef.current!.getBoundingClientRect();
+
+      const leftOffset = caseLeft - containerLeft;
+      const topOffset = caseTop - containerTop;
+
+      const actualX = renderedPosition.x - leftOffset;
+      const actualY = renderedPosition.y - topOffset;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      const userImage = new Image();
+      userImage.crossOrigin = "anonymous";
+      userImage.src = imageUrl;
+      await new Promise((resolve) => (userImage.onload = resolve));
+
+      ctx?.drawImage(
+        userImage,
+        actualX,
+        actualY,
+        renderedDimension.width,
+        renderedDimension.height,
+      );
+
+      const base64 = canvas.toDataURL();
+      const base62Data = base64.split(",")[1];
+
+      const blob = base64ToBlob(base62Data, "image/png");
+      const file = new File([blob], "filename.png", { type: "image/png" });
+
+      await startUpload([file], { configId });
+    } catch (error) {
+      alert(`Something went wrong please try again`);
+    }
+  }
+
+  function base64ToBlob(base64: string, mimiType: string) {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimiType });
+  }
+
   return (
-    <div className="grid-col-1 relative mb-20 mt-20 grid grid-cols-1 pb-20 lg:grid-cols-3">
-      <div className="relative col-span-2 flex h-[37.5rem] w-full max-w-4xl items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-300 p-12 text-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+    <div className="relative mb-20 mt-20 grid grid-cols-1 pb-20 lg:grid-cols-3">
+      <div
+        ref={containerRef}
+        className="relative col-span-2 flex h-[37.5rem] w-full max-w-4xl items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-300 p-12 text-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      >
         <div className="pointer-events-none relative aspect-[896/1831] w-60 bg-opacity-50">
           <AspectRatio
+            ref={phoneCaseRef}
             ratio={896 / 1831}
             className="pointer-events-none relative z-50 aspect-[896/1831] w-full"
           >
@@ -71,11 +165,11 @@ const DesignConfigurator = ({
           <div
             className={cn(
               "absolute inset-0 bottom-px left-[3px] right-[3px] top-px rounded-[32px]",
-              `bg-blue-950`,
-              // `bg-${options.color.tw}`
+              `bg-${options.color.tw}`,
             )}
           />
         </div>
+
         <Rnd
           default={{
             x: 150,
@@ -104,7 +198,7 @@ const DesignConfigurator = ({
             topLeft: <HandleComponent />,
           }}
         >
-          <div className="realtive h-full w-full">
+          <div className="relative h-full w-full">
             <NextImage
               src={imageUrl}
               fill
@@ -114,19 +208,21 @@ const DesignConfigurator = ({
           </div>
         </Rnd>
       </div>
-      {/* right hand side part */}
+
       <div className="col-span-full flex h-[37.5rem] w-full flex-col bg-white lg:col-span-1">
         <ScrollArea className="relative flex-1 overflow-auto">
           <div
-            area-hidden="true"
+            aria-hidden="true"
             className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-12 bg-gradient-to-t from-white"
           />
 
           <div className="px-8 pb-12 pt-8">
-            <h2 className="tracking-right text-3xl font-bold">
+            <h2 className="text-3xl font-bold tracking-tight">
               Customize your case
             </h2>
+
             <div className="my-6 h-px w-full bg-zinc-200" />
+
             <div className="relative mt-4 flex h-full flex-col justify-between">
               <div className="flex flex-col gap-6">
                 <RadioGroup
@@ -138,7 +234,7 @@ const DesignConfigurator = ({
                     }));
                   }}
                 >
-                  {/* <Label>Color: {options.color.label}</Label> */}
+                  <Label>Color: {options.color.label}</Label>
                   <div className="mt-3 flex items-center space-x-3">
                     {COLORS.map((color) => (
                       <RadioGroup.Option
@@ -165,10 +261,11 @@ const DesignConfigurator = ({
                 </RadioGroup>
 
                 <div className="relative flex w-full flex-col gap-3">
-                  {/* <Label>Model</Label> */}
+                  <Label>Model</Label>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
+                        variant="outline"
                         role="combobox"
                         className="w-full justify-between"
                       >
@@ -275,38 +372,40 @@ const DesignConfigurator = ({
             </div>
           </div>
         </ScrollArea>
-      </div>
 
-      <div className="h-16 w-full bg-white px-8">
-        <div className="h-px w-full bg-zinc-200" />
-        <div className="flex h-full w-full items-center justify-end">
-          <div className="flex w-full items-center gap-6">
-            <p className="whitespace-nowrap font-medium">
-              {/* {formatPrice(
-                (BASE_PRICE + options.finish.price + options.material.price) /
-                  100,
-              )} */}
-              val
-            </p>
-            <Button
-              // isLoading={isPending}
-              // disabled={isPending}
-              // loadingText="Saving"
-              // onClick={() =>
-              //   saveConfig({
-              //     configId,
-              //     color: options.color.value,
-              //     finish: options.finish.value,
-              //     material: options.material.value,
-              //     model: options.model.value,
-              //   })
-              // }
-              // size="sm"
-              className="w-full"
-            >
-              Continue
-              <ArrowRight className="ml-1.5 inline h-4 w-4" />
-            </Button>
+        <div className="h-16 w-full bg-white px-8">
+          <div className="h-px w-full bg-zinc-200" />
+          <div className="flex h-full w-full items-center justify-end">
+            <div className="flex w-full items-center gap-6">
+              <p className="whitespace-nowrap font-medium">
+                {/* {formatPrice(
+                  (BASE_PRICE +
+                    options.finish.price +
+                    options?.material.price) /
+                    100,
+                )} */}
+                {BASE_PRICE}
+              </p>
+              <Button
+                // isLoading={isPending}
+                // disabled={isPending}
+                // loadingText="Saving"
+                onClick={() =>
+                  saveConfig({
+                    configId,
+                    color: options.color.value,
+                    finish: "textured",
+                    material: "polycarbonate",
+                    model: options.model.value,
+                  })
+                }
+                size="sm"
+                className="w-full"
+              >
+                Continue
+                <ArrowRight className="ml-1.5 inline h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
