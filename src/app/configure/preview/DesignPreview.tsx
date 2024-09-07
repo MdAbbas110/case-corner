@@ -33,7 +33,7 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
   if (finish === "textured") totalPrice += PRODUCT_PRICES.finish.textured;
 
   const handlePayment = () => {
-    router.push("/configure/payment");
+    router.push("/payment");
   };
 
   return (
