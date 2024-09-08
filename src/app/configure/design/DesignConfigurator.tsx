@@ -378,13 +378,7 @@ const DesignConfigurator = ({
           <div className="flex h-full w-full items-center justify-end">
             <div className="flex w-full items-center gap-6">
               <p className="whitespace-nowrap font-medium">
-                {/* {formatPrice(
-                  (BASE_PRICE +
-                    options.finish.price +
-                    options?.material.price) /
-                    100,
-                )} */}
-                {BASE_PRICE}
+                {formatPrice((BASE_PRICE + 49 + 48) / 50)}
               </p>
               <Button
                 // isLoading={true}
